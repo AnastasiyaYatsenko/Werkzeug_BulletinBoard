@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block title %}Create New Ad{% endblock %}
+{% block body %}
+  <h2>Submit ad</h2>
+  <form action="" method=post>
+    {% if error %}
+      <p class=error><strong>Error:</strong> {{ error }}
+    {% endif %}
+    <div class="new_ad">
+      <p>Your name:
+        <input type=text name=ad_author maxlength="100">
+      <p>Title:
+        <input type=text name=title maxlength="100">
+      <p>
+        <textarea maxlength="1000" rows="4" name=ad_text class="ad_text">Your ad</textarea>
+        <input type=submit value="Publish">
+    </div>
+  </form>
+{% endblock %}

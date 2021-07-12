@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>{{ ad.theme }}</h2>
+  <form action="" method=post>
+    {% if error %}
+      <p class=error><strong>Error:</strong> {{ error }}
+    {% endif %}
+    <div class="ad_info">
+      <p> Author: {{ ad.author }}
+      <p> {{ ad.date }}
+      <p> {{ ad.text }}
+    </div>
+    <div class="new_comment">
+      <p>Leave your comment:</p>
+      <p>Name:
+        <input type=text name=comment_author maxlength="100">
+      <p>
+        <textarea maxlength="200" rows="4" name=comment_text>Your comment</textarea>
+        <input type=submit value="Publish">
+    </div>
+    <div class="ad_comments">
+      {% for item in ad.comments %}
+        <div class="comment">{{ item.author }}
+            <p>{{item.date}}</p>
+            <p> {{item.text}}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </form>
+{% endblock %}
