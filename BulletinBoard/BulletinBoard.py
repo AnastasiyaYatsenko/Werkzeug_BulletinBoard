@@ -1,4 +1,4 @@
-"""A simple URL shortener using Werkzeug and redis."""
+"""A simple bulletin board using Werkzeug and redis."""
 import os
 
 import redis
@@ -23,9 +23,27 @@ def get_hostname(url):
     return url_parse(url).netloc
 
 
+def validate_ad(name, title, text):
+    name.replace(' ', '')
+    title.replace(' ', '')
+    text.replace(' ', '')
+    if name == "" or title == "" or text == "":
+        return False
+    return True
+
+
+def validate_comment(name, text):
+    name.replace(' ', '')
+    text.replace(' ', '')
+    if name == "" or text == "":
+        return False
+    return True
+
+
 class BulletinBoard:
     def __init__(self, config):
-        self.redis = redis.StrictRedis(config["redis_host"], config["redis_port"], charset="utf-8", decode_responses=True)
+        self.redis = redis.StrictRedis(config["redis_host"], config["redis_port"],
+                                       charset="utf-8", decode_responses=True)
 
         template_path = os.path.join(os.path.dirname(__file__), "templates")
         self.jinja_env = Environment(
@@ -55,7 +73,8 @@ class BulletinBoard:
         if request.method == "POST":
             comment_author = request.form["comment_author"]
             comment_text = request.form["comment_text"]
-            self.insert_comment(comment_author, comment_text, short_id)
+            if validate_comment(comment_author, comment_text):
+                self.insert_comment(comment_author, comment_text, short_id)
         megaobj = json.loads(self.redis.get(short_id))
         return self.render_template("ad_detailed.html", ad=megaobj)
 
@@ -64,7 +83,9 @@ class BulletinBoard:
             ad_author = request.form["ad_author"]
             title = request.form["title"]
             ad_text = request.form["ad_text"]
-            self.insert_ad(ad_author, title, ad_text)
+            if validate_ad(ad_author, title, ad_text):
+                self.insert_ad(ad_author, title, ad_text)
+                return redirect('/')
         return self.render_template("new_ad.html")
 
     def error_404(self):
@@ -76,10 +97,10 @@ class BulletinBoard:
         now = datetime.now()
         short_id = (now - datetime(1970, 1, 1)).total_seconds()
         while self.redis.get(str(short_id)) is not None:
-            short_id =+ 1
+            short_id += 1
         str_now = now.strftime("%d/%m/%Y %H:%M")
-        ad = f'"author": "{author}", "theme": "{title}", "text": "{text}", "date": "{str_now}", "comments":[]'
-        self.redis.set(f"{str(short_id)}", "{"+ad+"}")
+        dict_ad = {"author": author, "theme": title, "text": text, "date": str_now, "comments": []}
+        self.redis.set(str(short_id), json.dumps(dict_ad))
         return str(short_id)
 
     def insert_comment(self, author, text, short_id):
